@@ -13,22 +13,52 @@ class PolicyValueNet():
         # 1. Input:
         self.input_states = tf.placeholder(
                 tf.float32, shape=[None, 4, board_height, board_width])
-        self.input_state = tf.transpose(self.input_states, [0, 2, 3, 1])
-        # 2. Common Networks Layers
-        self.conv1 = tf.layers.conv2d(inputs=self.input_state,
+        self.res1in = tf.transpose(self.input_states, [0, 2, 3, 1])
+
+        # 2.1 residual block x16
+        self.res1conv1 = tf.layers.conv2d(inputs=self.res1in,
+                                      filters=16, kernel_size=[3, 3],
+                                      padding="same", data_format="channels_last",
+                                      activation=tf.nn.relu)
+        self.res1conv2 = tf.layers.conv2d(inputs=self.res1conv1,
+                                      filters=16, kernel_size=[3, 3],
+                                      padding="same", data_format="channels_last",
+                                      activation=tf.nn.relu)
+        self.res1linear = tf.layers.conv2d(inputs=self.res1in,
+                                      filters=16, kernel_size=[1, 1],
+                                      padding="same", data_format="channels_last")
+        self.res2in = self.res1conv2 + self.res1linear
+
+        # 2.2 residual block x32
+        self.res2conv1 = tf.layers.conv2d(inputs=self.res2in,
                                       filters=32, kernel_size=[3, 3],
                                       padding="same", data_format="channels_last",
                                       activation=tf.nn.relu)
-        self.conv2 = tf.layers.conv2d(inputs=self.conv1, filters=64,
-                                      kernel_size=[3, 3], padding="same",
-                                      data_format="channels_last",
+        self.res2conv2 = tf.layers.conv2d(inputs=self.res2conv1,
+                                      filters=32, kernel_size=[3, 3],
+                                      padding="same", data_format="channels_last",
                                       activation=tf.nn.relu)
-        self.conv3 = tf.layers.conv2d(inputs=self.conv2, filters=128,
-                                      kernel_size=[3, 3], padding="same",
-                                      data_format="channels_last",
+        self.res2linear = tf.layers.conv2d(inputs=self.res2in,
+                                      filters=32, kernel_size=[1, 1],
+                                      padding="same", data_format="channels_last")
+        self.res3in = self.res2conv2 + self.res2linear
+
+        # 2.3 residual block x64
+        self.res3conv1 = tf.layers.conv2d(inputs=self.res3in,
+                                      filters=64, kernel_size=[3, 3],
+                                      padding="same", data_format="channels_last",
                                       activation=tf.nn.relu)
+        self.res3conv2 = tf.layers.conv2d(inputs=self.res3conv1,
+                                      filters=64, kernel_size=[3, 3],
+                                      padding="same", data_format="channels_last",
+                                      activation=tf.nn.relu)
+        self.res3linear = tf.layers.conv2d(inputs=self.res3in,
+                                      filters=64, kernel_size=[1, 1],
+                                      padding="same", data_format="channels_last")
+        self.resout = self.res3conv2 + self.res3linear
+
         # 3-1 Action Networks
-        self.action_conv = tf.layers.conv2d(inputs=self.conv3, filters=4,
+        self.action_conv = tf.layers.conv2d(inputs=self.resout, filters=4,
                                             kernel_size=[1, 1], padding="same",
                                             data_format="channels_last",
                                             activation=tf.nn.relu)
@@ -41,7 +71,7 @@ class PolicyValueNet():
                                          units=board_height * board_width,
                                          activation=tf.nn.log_softmax)
         # 4 Evaluation Networks
-        self.evaluation_conv = tf.layers.conv2d(inputs=self.conv3, filters=2,
+        self.evaluation_conv = tf.layers.conv2d(inputs=self.resout, filters=2,
                                                 kernel_size=[1, 1],
                                                 padding="same",
                                                 data_format="channels_last",
