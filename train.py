@@ -34,7 +34,7 @@ class TrainPipeline():
         self.kl_targ = 0.02
         self.check_freq = 50
         self.game_batch_num = 1500
-        self.best_win_ratio = 0.0
+        self.best_loss = None
         # num of simulations used for the pure mcts, which is used as
         # the opponent to evaluate the trained policy
         self.pure_mcts_playout_num = 1000
@@ -163,23 +163,18 @@ class TrainPipeline():
                 self.collect_selfplay_data(self.play_batch_size)
                 print("{}: batch i:{}, episode_len:{}".format(
                         datetime.datetime.now(), i+1, self.episode_len))
+
                 if len(self.data_buffer) > self.batch_size:
                     loss, entropy = self.policy_update()
-                # check the performance of the current model,
-                # and save the model params
-                if (i+1) % self.check_freq == 0:
-                    win_ratio = self.policy_evaluate()
-                    print("current self-play batch: {}, win_ratio: {}".format(i+1, win_ratio))
-                    self.policy_value_net.save_model('checkpoint/current_policy.model')
-                    if win_ratio > self.best_win_ratio:
-                        print("New best policy!!!!!!!!")
-                        self.best_win_ratio = win_ratio
-                        # update the best_policy
+                    if self.best_loss is None or loss < self.best_loss:
+                        self.best_loss = loss
+                        print("New best policy auto save at batch {}".format(i+1))
                         self.policy_value_net.save_model('checkpoint/best_policy.model')
-                        if (self.best_win_ratio == 1.0 and
-                                self.pure_mcts_playout_num < 5000):
-                            self.pure_mcts_playout_num += 1000
-                            self.best_win_ratio = 0.0
+
+                if (i+1) % self.check_freq == 0:
+                    print("current model auto save at batch {}".format(i+1))
+                    self.policy_value_net.save_model('checkpoint/current_policy.model')
+
         except KeyboardInterrupt:
             print('\n\rquit')
 

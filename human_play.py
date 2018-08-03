@@ -5,11 +5,7 @@ import pickle
 from game import Board, Game
 from mcts_pure import MCTSPlayer as MCTS_Pure
 from mcts_alphaZero import MCTSPlayer
-from policy_value_net_numpy import PolicyValueNetNumpy
-# from policy_value_net import PolicyValueNet  # Theano and Lasagne
-# from policy_value_net_pytorch import PolicyValueNet  # Pytorch
-# from policy_value_net_tensorflow import PolicyValueNet # Tensorflow
-# from policy_value_net_keras import PolicyValueNet  # Keras
+from policy_value_net import PolicyValueNet # Tensorflow
 
 
 class Human(object):
@@ -42,27 +38,15 @@ class Human(object):
 
 def run():
     width, height = 9, 9
-    model_file = None
+    model_file = 'best_policy.model'
     try:
         board = Board(width=width, height=height)
         game = Game(board)
 
         # ############### human VS AI ###################
-        # load the trained policy_value_net in either Theano/Lasagne, PyTorch or TensorFlow
 
-        # best_policy = PolicyValueNet(width, height, model_file = model_file)
-        # mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=800)
-
-        # load the provided model (trained in Theano/Lasagne) into a MCTS player written in pure numpy
-        try:
-            policy_param = pickle.load(open(model_file, 'rb'))
-        except:
-            policy_param = pickle.load(open(model_file, 'rb'),
-                                       encoding='bytes')  # To support python3
-        best_policy = PolicyValueNetNumpy(width, height, policy_param)
-        mcts_player = MCTSPlayer(best_policy.policy_value_fn,
-                                 c_puct=5,
-                                 n_playout=800)  # set larger n_playout for better performance
+        best_policy = PolicyValueNet(width, height, model_file = model_file)
+        mcts_player = MCTSPlayer(best_policy.policy_value_fn, c_puct=5, n_playout=800)
 
         # uncomment the following line to play with pure MCTS (it's much weaker even with a larger n_playout)
         # mcts_player = MCTS_Pure(c_puct=5, n_playout=1000)

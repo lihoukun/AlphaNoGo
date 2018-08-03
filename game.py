@@ -78,15 +78,17 @@ class Board(object):
         if w < self.width - 1: adjs.append(self.location_to_move((h, w+1)))
         return adjs
 
-    def has_vacancy(self, move, visited, player):
+    def has_vacancy(self, move, visited):
         if visited[move] == 1: return False
-        if move not in self.states: return True
-        if self.states[move] != player: return False
         visited[move] = True
 
         for adj_move in self.adjacent_moves(move):
-            if self.has_vacancy(adj_move, visited, player):
+            if visited[adj_move] == 1: continue
+            if adj_move not in self.states:
                 return True
+            if self.states[adj_move] == self.states[move]:
+                if self.has_vacancy(adj_move, visited):
+                    return True
         return False
 
     def is_movable(self, move, player):
@@ -94,47 +96,64 @@ class Board(object):
         if move >= self.width * self.height: return False
         if move < 0: return False
 
+        # do not lock other player
+        other_player = self.get_other_player(player)
+        for adj_move in self.adjacent_moves(move):
+            if adj_move in self.states and self.states[adj_move] == other_player:
+                visited = [0] * (self.width * self.height)
+                visited[move] = 1
+                if not self.has_vacancy(adj_move, visited):
+                    return False
+
+        # do not block current player
+        for adj_move in self.adjacent_moves(move):
+            if adj_move not in self.states:
+                return True
+
         visited = [0] * (self.width * self.height)
         visited[move] = 1
 
         for adj_move in self.adjacent_moves(move):
-            if adj_move in self.states:
-                if self.has_vacancy(adj_move, visited, player):
+            if adj_move in self.states and self.states[adj_move] == player:
+                if self.has_vacancy(adj_move, visited):
                     return True
-            else:
-                return True
 
         return False
 
     def do_move(self, move):
         self.states[move] = self.current_player
+        self.current_player = self.get_other_player(self.current_player)
+        self.last_move = move
 
         for player in self.players:
             if move in self.availables[player]:
                 self.availables[player].remove(move)
-            for adj_move in self.adjacent_moves(move):
-                if adj_move in self.availables[player] and not self.is_movable(adj_move, player):
-                    self.availables[player].remove(adj_move)
 
-        self.current_player = (
-            self.players[0] if self.current_player == self.players[1]
-            else self.players[1]
-        )
-        self.last_move = move
+        for player in self.players:
+            trash = []
+            for can_move in self.availables[player]:
+                if not self.is_movable(can_move, player):
+                    trash.append(can_move)
+
+            for can_move in trash:
+                self.availables[player].remove(can_move)
 
     def game_end(self):
         """Check whether the game is ended or not"""
         if len(self.availables[self.current_player]) == 0:
-            winner = (
-                self.players[0] if self.current_player == self.players[1]
-                else self.players[1]
-            )
+            winner = self.get_other_player(self.current_player)
             return True, winner
         else:
             return False, -1
 
     def get_current_player(self):
         return self.current_player
+
+    def get_other_player(self, player):
+        if player == self.players[1]:
+            return self.players[0]
+        else:
+            return self.players[1]
 
 class Game(object):
     """game server"""
