@@ -166,8 +166,8 @@ class Game(object):
         width = board.width
         height = board.height
 
-        print("Player", player1, "with X".rjust(3))
-        print("Player", player2, "with O".rjust(3))
+        print("Player {} with X: availables: {}".format(player1, len(self.board.availables[player1])))
+        print("Player {} with O: availables: {}".format(player2, len(self.board.availables[player2])))
         print()
         for x in range(width):
             print("{0:8}".format(x), end='')
