@@ -166,8 +166,8 @@ class Game(object):
         width = board.width
         height = board.height
 
-        print("Player {} with X: availables: {}".format(player1, len(self.board.availables[player1])))
-        print("Player {} with O: availables: {}".format(player2, len(self.board.availables[player2])))
+        print("{} with X: availables: {}".format(player1, len(self.board.availables[player1.player])))
+        print("{} with O: availables: {}".format(player2, len(self.board.availables[player2.player])))
         print()
         for x in range(width):
             print("{0:8}".format(x), end='')
@@ -177,9 +177,9 @@ class Game(object):
             for j in range(width):
                 loc = i * width + j
                 p = board.states.get(loc, -1)
-                if p == player1:
+                if p == player1.player:
                     print('X'.center(8), end='')
-                elif p == player2:
+                elif p == player2.player:
                     print('O'.center(8), end='')
                 else:
                     print('_'.center(8), end='')
@@ -196,24 +196,21 @@ class Game(object):
         player2.set_player_ind(p2)
         players = {p1: player1, p2: player2}
         if is_shown:
-            self.graphic(self.board, player1.player, player2.player)
+            self.graphic(self.board, player1, player2)
         while True:
             current_player = self.board.get_current_player()
             player_in_turn = players[current_player]
             move = player_in_turn.get_action(self.board)
             self.board.do_move(move)
             if is_shown:
-                self.graphic(self.board, player1.player, player2.player)
+                self.graphic(self.board, player1, player2)
             end, winner = self.board.game_end()
             if end:
                 if is_shown:
-                    if winner != -1:
-                        print("Game end. Winner is", players[winner])
-                    else:
-                        print("Game end. Tie")
+                    print("Game end. Winner is", players[winner])
                 return winner
 
-    def start_self_play(self, player, is_shown=0, temp=1e-3):
+    def start_self_play(self, player, temp=1e-3):
         """ start a self-play game using a MCTS player, reuse the search tree,
         and store the self-play data: (state, mcts_probs, z) for training
         """
@@ -230,8 +227,6 @@ class Game(object):
             current_players.append(self.board.current_player)
             # perform a move
             self.board.do_move(move)
-            if is_shown:
-                self.graphic(self.board, p1, p2)
             end, winner = self.board.game_end()
             if end:
                 # winner from the perspective of the current player of each state
