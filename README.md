@@ -17,13 +17,16 @@ Using ideas from AlphaGo Zero to apply to the NoGo game
 `python3 human_play.py`
 
 ## Results
-1. After about 500 games of self play, AI learned to make eyes
+1. After about 500 games of self play, AI learned to make eyes.
+
 ![image](pic/AlphaNoGo_500.png)
 
-2. After about 1000 games, AI learn to make eyes first close to corner is more efficient
+2. After about 1000 games, AI learn to make eyes first close to corner is more efficient.
+
 ![iamge](pic/AlphaNoGo_1000.png)
 
 3. After about 1500 games, AI find the best efficient starting point to be eact corner, and has learned to prevent human from making eyes.
+
 ![image](pic/AlphaNoGo_1500.png)
 
  
