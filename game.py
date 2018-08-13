@@ -236,9 +236,4 @@ class Game(object):
                     winners_z[np.array(current_players) != winner] = -1.0
                 # reset MCTS root node
                 player.reset_player()
-                if is_shown:
-                    if winner != -1:
-                        print("Game end. Winner is player:", winner)
-                    else:
-                        print("Game end. Tie")
                 return winner, zip(states, mcts_probs, winners_z)

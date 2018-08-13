@@ -13,7 +13,7 @@ from policy_value_net import PolicyValueNet
 
 
 class TrainPipeline():
-    def __init__(self, init_model=None):
+    def __init__(self):
         # params of the board and the game
         self.board_width = 9
         self.board_height = 9
@@ -38,7 +38,8 @@ class TrainPipeline():
         # num of simulations used for the pure mcts, which is used as
         # the opponent to evaluate the trained policy
         self.pure_mcts_playout_num = 1000
-        if init_model:
+        init_model = 'checkpoint/current_policy.model'
+        if os.path.isfile(init_model + '.index'):
             # start training from an initial policy-value net
             self.policy_value_net = PolicyValueNet(self.board_width,
                                                    self.board_height,
